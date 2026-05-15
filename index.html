@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MORTAL KOMBAT — YOU HAVE BEEN CHOSEN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=MedievalSharp&family=Orbitron:wght@700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --mk-gold: #c8a84e;
+    --mk-red: #b91c1c;
+    --mk-crimson: #dc2626;
+    --mk-dark: #0a0a0a;
+    --mk-darker: #050505;
+    --mk-ember: #f59e0b;
+    --mk-ice: #38bdf8;
+    --mk-purple: #7c3aed;
+    --dragon-gold: #d4a017;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--mk-darker);
+    color: #e5e5e5;
+    font-family: 'Cinzel', serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── FIRE PARTICLE CANVAS ── */
+  #fire-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── INTRO OVERLAY ── */
+  #intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.8s ease;
+  }
+  #intro-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #intro-overlay .dragon-icon {
+    font-size: 80px;
+    animation: pulse-glow 2s ease-in-out infinite;
+    margin-bottom: 30px;
+  }
+  #intro-overlay h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 6vw, 64px);
+    color: var(--mk-gold);
+    text-transform: uppercase;
+    letter-spacing: 12px;
+    text-shadow: 0 0 30px rgba(200, 168, 78, 0.6), 0 0 60px rgba(200, 168, 78, 0.3);
+    animation: title-flicker 3s ease-in-out infinite;
+  }
+  #intro-overlay .subtitle {
+    font-size: clamp(14px, 2.5vw, 22px);
+    color: var(--mk-crimson);
+    margin-top: 20px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    animation: pulse-red 2s ease-in-out infinite;
+  }
+  #intro-overlay .click-prompt {
+    margin-top: 50px;
+    font-size: 14px;
+    color: #666;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    animation: blink 1.5s step-end infinite;
+  }
+
+  @keyframes title-flicker {
+    0%, 100% { opacity: 1; text-shadow: 0 0 30px rgba(200, 168, 78, 0.6), 0 0 60px rgba(200, 168, 78, 0.3); }
+    50% { opacity: 0.95; text-shadow: 0 0 40px rgba(200, 168, 78, 0.8), 0 0 80px rgba(200, 168, 78, 0.4); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(200, 168, 78, 0.5)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(200, 168, 78, 0.8)); }
+  }
+  @keyframes pulse-red {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; text-shadow: 0 0 20px rgba(220, 38, 38, 0.5); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    position: relative;
+  }
+  .header .dragon-emblem {
+    font-size: 100px;
+    display: block;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 20px rgba(212, 160, 23, 0.6));
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(32px, 7vw, 72px);
+    color: var(--mk-gold);
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    line-height: 1.1;
+    text-shadow:
+      0 0 20px rgba(200, 168, 78, 0.4),
+      0 0 40px rgba(200, 168, 78, 0.2),
+      2px 2px 0 #000;
+    margin-bottom: 10px;
+  }
+  .header .tagline {
+    font-size: clamp(16px, 3vw, 24px);
+    color: var(--mk-crimson);
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    font-weight: 700;
+    text-shadow: 0 0 15px rgba(185, 28, 28, 0.5);
+  }
+
+  /* ── INVITATION CARD ── */
+  .invite-card {
+    background: linear-gradient(135deg, #111 0%, #1a1a1a 50%, #111 100%);
+    border: 2px solid var(--mk-gold);
+    border-radius: 4px;
+    padding: 40px 30px;
+    margin: 30px 0;
+    position: relative;
+    box-shadow:
+      0 0 30px rgba(200, 168, 78, 0.15),
+      inset 0 0 60px rgba(0, 0, 0, 0.5);
+  }
+  .invite-card::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 8px; right: 8px; bottom: 8px;
+    border: 1px solid rgba(200, 168, 78, 0.2);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .invite-card .chosen-text {
+    text-align: center;
+    font-size: clamp(14px, 2.5vw, 20px);
+    color: #aaa;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .invite-card .chosen-text strong {
+    color: var(--mk-gold);
+    font-size: 1.2em;
+  }
+
+  .invite-card .date-block {
+    text-align: center;
+    padding: 25px;
+    margin: 25px 0;
+    background: rgba(200, 168, 78, 0.05);
+    border-top: 1px solid rgba(200, 168, 78, 0.3);
+    border-bottom: 1px solid rgba(200, 168, 78, 0.3);
+  }
+  .date-block .day-label {
+    font-size: 14px;
+    color: var(--mk-gold);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+  .date-block .date {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    color: #fff;
+    font-weight: 900;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    margin: 8px 0;
+  }
+  .date-block .year {
+    font-size: 16px;
+    color: #888;
+    letter-spacing: 8px;
+  }
+
+  .venue-block {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+  .venue-block .venue-label {
+    font-size: 12px;
+    color: var(--mk-gold);
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .venue-block .venue-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(18px, 3.5vw, 30px);
+    color: #fff;
+    font-weight: 900;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .quote {
+    text-align: center;
+    font-family: 'MedievalSharp', cursive;
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--mk-ember);
+    font-style: italic;
+    padding: 20px;
+    line-height: 1.6;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  }
+
+  /* ── SCHEDULE ── */
+  .schedule {
+    margin: 40px 0;
+  }
+  .schedule h2 {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(20px, 4vw, 32px);
+    color: var(--mk-gold);
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px rgba(200, 168, 78, 0.3);
+  }
+  .schedule h2 .subtitle-line {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    letter-spacing: 4px;
+    margin-top: 5px;
+    font-family: 'Cinzel', serif;
+  }
+
+  .round {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(90deg, rgba(200, 168, 78, 0.05) 0%, transparent 100%);
+    border-left: 3px solid var(--mk-gold);
+    border-radius: 0 4px 4px 0;
+    transition: all 0.3s ease;
+    align-items: flex-start;
+  }
+  .round:hover {
+    background: linear-gradient(90deg, rgba(200, 168, 78, 0.1) 0%, transparent 100%);
+    transform: translateX(5px);
+    box-shadow: -3px 0 15px rgba(200, 168, 78, 0.2);
+  }
+
+  .round .round-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    width: 50px;
+    text-align: center;
+    filter: drop-shadow(0 0 8px rgba(200, 168, 78, 0.4));
+  }
+  .round .round-content {
+    flex: 1;
+  }
+  .round .round-time {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    color: var(--mk-crimson);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .round .round-title {
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--mk-gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .round .round-desc {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 15px;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .round .round-desc strong {
+    color: var(--mk-ember);
+  }
+  .round .round-desc em {
+    color: var(--mk-ice);
+    font-style: normal;
+  }
+
+  /* colored borders per section */
+  .round.round-red { border-left-color: var(--mk-crimson); }
+  .round.round-ice { border-left-color: var(--mk-ice); }
+  .round.round-purple { border-left-color: var(--mk-purple); }
+
+  /* ── KOMBATANTS SECTION ── */
+  .kombatants {
+    text-align: center;
+    margin: 50px 0 30px;
+    padding: 30px 0;
+  }
+  .kombatants h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(18px, 3vw, 26px);
+    color: var(--mk-gold);
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    margin-bottom: 8px;
+  }
+  .kombatants .kombatants-subtitle {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 16px;
+    color: #aaa;
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+
+  /* ── CHARACTER CARDS ── */
+  .character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .fighter-card {
+    background: linear-gradient(180deg, #151515 0%, #0d0d0d 100%);
+    border: 1px solid rgba(200, 168, 78, 0.25);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .fighter-card:hover {
+    border-color: var(--mk-gold);
+    box-shadow: 0 0 20px rgba(200, 168, 78, 0.2), 0 8px 30px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+  }
+  .fighter-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--mk-gold), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .fighter-card:hover::after {
+    opacity: 1;
+  }
+
+  .fighter-card .card-img-wrap {
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center bottom, #1a1510 0%, #0a0a0a 70%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+  }
+  .fighter-card .card-img-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(transparent, #0d0d0d);
+    z-index: 1;
+  }
+  .fighter-card .card-img-wrap img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(0 0 15px rgba(0,0,0,0.8));
+    transition: transform 0.3s ease;
+  }
+  .fighter-card:hover .card-img-wrap img {
+    transform: scale(1.05);
+  }
+  /* Fallback when image fails */
+  .fighter-card .card-img-wrap .img-fallback {
+    font-size: 72px;
+    padding-bottom: 40px;
+    filter: drop-shadow(0 0 20px rgba(200, 168, 78, 0.4));
+  }
+
+  .fighter-card .card-body {
+    padding: 16px 18px 20px;
+    position: relative;
+    z-index: 2;
+  }
+  .fighter-card .card-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    color: var(--mk-gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+  .fighter-card .card-game {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .fighter-card .card-blurb {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 14px;
+    color: #999;
+    line-height: 1.5;
+  }
+
+  /* ── RSVP / FOOTER ── */
+  .rsvp-section {
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 40px;
+  }
+  .rsvp-section .finish-him {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(24px, 5vw, 42px);
+    color: var(--mk-crimson);
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    animation: pulse-red 2s ease-in-out infinite;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(185, 28, 28, 0.4);
+  }
+  .rsvp-section p {
+    font-size: 16px;
+    color: #aaa;
+    line-height: 1.8;
+    max-width: 500px;
+    margin: 0 auto 15px;
+  }
+  .rsvp-section .shang-gif {
+    margin: 25px auto;
+    max-width: 480px;
+    border: 2px solid rgba(200, 168, 78, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+  }
+  .rsvp-section .shang-gif img {
+    width: 100%;
+    display: block;
+  }
+  .rsvp-section .rsvp-cta {
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--mk-gold);
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 20px;
+  }
+  .rsvp-section .phone-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(20px, 4vw, 32px);
+    color: #fff;
+    letter-spacing: 4px;
+    margin-top: 10px;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+  }
+  .rsvp-section .phone-number a {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .rsvp-section .phone-number a:hover {
+    color: var(--mk-gold);
+    text-shadow: 0 0 20px rgba(200, 168, 78, 0.4);
+  }
+  .rsvp-section .flawless {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: #444;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-top: 40px;
+  }
+
+  /* ── DRAGON DIVIDER ── */
+  .divider {
+    text-align: center;
+    padding: 15px 0;
+    font-size: 24px;
+    color: var(--mk-gold);
+    opacity: 0.4;
+    letter-spacing: 20px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #0a0a0a; }
+  ::-webkit-scrollbar-thumb { background: var(--mk-gold); border-radius: 4px; }
+
+  /* ── ANIMATIONS ── */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .invite-card { padding: 25px 15px; }
+    .round { flex-direction: column; gap: 10px; padding: 15px; }
+    .round .round-icon { width: auto; }
+    .header { padding: 40px 15px 30px; }
+    .character-grid { grid-template-columns: 1fr; }
+    .fighter-card .card-img-wrap { height: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── INTRO OVERLAY ── -->
+<div id="intro-overlay">
+  <div class="dragon-icon">🐉</div>
+  <h1>Mortal Kombat</h1>
+  <div class="subtitle">You Have Been Chosen</div>
+  <div class="click-prompt">— Press any key to accept your fate —</div>
+</div>
+
+<!-- ── FIRE PARTICLES ── -->
+<canvas id="fire-canvas"></canvas>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="main-content">
+
+  <!-- HEADER -->
+  <div class="header fade-up">
+    <span class="dragon-emblem">🐉</span>
+    <h1>Mortal Kombat</h1>
+    <div class="tagline">Tournament of Champions</div>
+  </div>
+
+  <!-- INVITATION -->
+  <div class="invite-card fade-up">
+    <div class="chosen-text">
+      You have been <strong>chosen</strong> to compete in a tournament<br>
+      the likes of which the realms have never seen.
+    </div>
+
+    <div class="date-block">
+      <div class="day-label">Saturday</div>
+      <div class="date">May 16</div>
+      <div class="year">2 0 2 6</div>
+    </div>
+
+    <div class="venue-block">
+      <div class="venue-label">The Arena</div>
+      <div class="venue-name">The MeepTots Man Cave</div>
+    </div>
+
+    <div class="quote">
+      "The fate of billions will depend upon you.<br>
+      Lord Raiden has summoned Earth's greatest warriors...<br>
+      Do not fail us."
+    </div>
+  </div>
+
+  <div class="divider">⚔ 🐉 ⚔</div>
+
+  <!-- SCHEDULE -->
+  <div class="schedule">
+    <h2>
+      Rounds of Kombat
+      <span class="subtitle-line">The Order of Battle</span>
+    </h2>
+
+    <!-- ROUND 1 -->
+    <div class="round fade-up">
+      <div class="round-icon">🕹️</div>
+      <div class="round-content">
+        <div class="round-time">Round 1 — 12:00 PM</div>
+        <div class="round-title">Arcade &amp; Console Kombat</div>
+        <div class="round-desc">
+          The tournament begins! Doors open at <strong>noon</strong>. Step into the arena and prove your worth across generations of
+          <strong>Mortal Kombat</strong> — from the classic arcade trilogy that started it all,
+          to <strong>MK11</strong> and <strong>Mortal Kombat 1</strong> on console.
+          Test your might on the sticks, or grab a controller and show these Earthrealm warriors
+          what you're made of. All skill levels welcome — <em>there are no mercy rules here</em>.
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUND 2 -->
+    <div class="round round-red fade-up">
+      <div class="round-icon">🎬</div>
+      <div class="round-content">
+        <div class="round-time">Round 2 — 1:00 PM Sharp</div>
+        <div class="round-title">Mortal Kombat (2021) Screening</div>
+        <div class="round-desc">
+          "Get over here!" The screen lights up at <strong>1:00 PM sharp</strong> with the
+          <strong>2021 Mortal Kombat</strong> film. Watch Cole Young discover his
+          arcana, Kano deliver the one-liners, and <em>Sub-Zero and Scorpion</em> settle
+          their centuries-old blood feud in one of the most brutal fight sequences ever filmed.
+          <em>Jax, Sonya, Kung Lao, Liu Kang</em> — the whole roster shows up.
+          Snacks and refreshments provided, because even warriors need to refuel between rounds.
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUND 3 -->
+    <div class="round round-ice fade-up">
+      <div class="round-icon">🎟️</div>
+      <div class="round-content">
+        <div class="round-time">Round 3 — 4:15 PM</div>
+        <div class="round-title">Mortal Kombat 2 — In Theatres</div>
+        <div class="round-desc">
+          We take the fight to the big screen. <strong>Mortal Kombat 2</strong> is now in theatres and
+          we are going as a squad. The Outworld invasion continues —
+          will <em>Liu Kang</em> finally face <em>Shang Tsung</em> in the true tournament?
+          Will <em>Johnny Cage</em> finally make his entrance? Will <em>Kitana</em> betray Outworld?
+          Only one way to find out.
+          <strong>Showtime: 4:15 PM.</strong> Do not be late — Shang Tsung does not wait.
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUND 4 -->
+    <div class="round round-purple fade-up">
+      <div class="round-icon">🍻</div>
+      <div class="round-content">
+        <div class="round-time">Final Round — Evening</div>
+        <div class="round-title">Flawless Victory &amp; Fight Night</div>
+        <div class="round-desc">
+          The warriors return from the theatre for the final round. Drinks flow,
+          the games are back on, and we fire up <strong>Netflix</strong> for a
+          real-world fight card. The main event:
+          <strong>Ronda Rousey vs. Gina Carano</strong> — two of the most dangerous women on the
+          planet throwing down. Whether you're still gaming, watching the fights,
+          or just soaking it all in — <em>the Kombat doesn't end until you say "Fatality."</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">⚔ 🐉 ⚔</div>
+
+  <!-- KOMBATANTS -->
+  <div class="kombatants fade-up">
+    <h2>Choose Your Fighter</h2>
+    <p class="kombatants-subtitle">
+      Channel your inner kombatant. Costumes, face paint, and mortal-combat-appropriate
+      attire are highly encouraged but not required. Bonus points if you show up as your main.
+    </p>
+
+    <div class="character-grid" id="fighter-grid">
+
+      <!-- Scorpion -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/scorpion.png"
+               alt="Scorpion" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🔥</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Scorpion</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">"GET OVER HERE!" The Shirai Ryu's fiery champion burns with vengeance. If you settle disputes by dragging your enemies toward you and setting them ablaze, Scorpion is your pick.</div>
+        </div>
+      </div>
+
+      <!-- Sub-Zero -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/subzero.png"
+               alt="Sub-Zero" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🧊</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Sub-Zero</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">The ice-cold Lin Kuei grandmaster. Calculated, ruthless, and always in control. Choose Sub-Zero if you believe the best offense is freezing your opponent solid and shattering them into pieces.</div>
+        </div>
+      </div>
+
+      <!-- Liu Kang -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/liukang.png"
+               alt="Liu Kang" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🔥</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Liu Kang</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Earthrealm's chosen champion and Fire God protector of the New Era. The ultimate martial artist — bicycle kicks and fireballs never go out of style. Pick Liu Kang if you want to be the hero.</div>
+        </div>
+      </div>
+
+      <!-- Kitana -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/kitana.png"
+               alt="Kitana" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🪭</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Kitana</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Outworld's deadly princess armed with razor-sharp war fans. Elegant, lethal, and politically savvy. Choose Kitana if your style is grace that meets guaranteed destruction.</div>
+        </div>
+      </div>
+
+      <!-- Raiden -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/raiden.png"
+               alt="Raiden" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">⚡</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Raiden</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Once the God of Thunder, now Earthrealm's most electrifying champion. He's got lightning hands and a straw hat. Pick Raiden if you like electrifying your opponents — literally.</div>
+        </div>
+      </div>
+
+      <!-- Johnny Cage -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/johnnycage.png"
+               alt="Johnny Cage" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🕶️</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Johnny Cage</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Hollywood A-lister, shadow-kicking, split-punching legend. All ego, all power. Choose Johnny Cage if you talk trash AND back it up — $500 sunglasses not included.</div>
+        </div>
+      </div>
+
+      <!-- Sonya Blade -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/kameos/sonya.png"
+               alt="Sonya Blade" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">💪</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Sonya Blade</div>
+          <div class="card-game">Mortal Kombat 1 — Kameo</div>
+          <div class="card-blurb">Special Forces commander, no-nonsense, all business. Energy rings and military precision. Pick Sonya if you prefer to outthink AND outfight every opponent in the room.</div>
+        </div>
+      </div>
+
+      <!-- Kung Lao -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/kunglao.png"
+               alt="Kung Lao" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🎩</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Kung Lao</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">The razor-brimmed hat tells you everything you need to know. Shaolin warrior with a chip on his shoulder and a blade on his head. Choose Kung Lao if flashy kills are your thing.</div>
+        </div>
+      </div>
+
+      <!-- Jax -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/kameos/jax.png"
+               alt="Jax" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🤖</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Jax</div>
+          <div class="card-game">Mortal Kombat 1 — Kameo</div>
+          <div class="card-blurb">Metal arms. Big punches. Ground pounds. That's the whole pitch. Pick Jax if you solve every problem with overwhelming force and a pair of bionic fists.</div>
+        </div>
+      </div>
+
+      <!-- Kano -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/kameos/kano.png"
+               alt="Kano" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🔴</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Kano</div>
+          <div class="card-game">Mortal Kombat 1 — Kameo</div>
+          <div class="card-blurb">The Black Dragon's most ruthless cutthroat. Eye laser, knife throws, and zero honor. Choose Kano if you're the villain of every story and proud of it. "Kano wins."</div>
+        </div>
+      </div>
+
+      <!-- Shang Tsung -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/shangtsung.png"
+               alt="Shang Tsung" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">💀</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Shang Tsung</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">The soul-stealing sorcerer. Shape-shifting deceiver and ultimate schemer. Pick Shang Tsung if you want to steal your opponent's moves — and their soul while you're at it.</div>
+        </div>
+      </div>
+
+      <!-- Mileena -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/mileena.png"
+               alt="Mileena" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">😈</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Mileena</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Kitana's feral twin with a mouth full of Tarkatan razor teeth. Savage, unhinged, and terrifyingly fast. Choose Mileena if you prefer biting over diplomacy.</div>
+        </div>
+      </div>
+
+      <!-- Reptile -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/reptile.png"
+               alt="Reptile" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🦎</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Reptile</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">Acid-spitting Zaterran shape-shifter with camouflage abilities. Stealthy, venomous, and loyal to a fault. Pick Reptile if you prefer your enemies never see you coming.</div>
+        </div>
+      </div>
+
+      <!-- Ermac -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/ermac.png"
+               alt="Ermac" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">👻</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Ermac</div>
+          <div class="card-game">Mortal Kombat 1 — DLC</div>
+          <div class="card-blurb">A fusion of thousands of warrior souls bound in one body. Telekinetic powers and an eerie presence. Choose Ermac if you want an entire army fighting inside one vessel.</div>
+        </div>
+      </div>
+
+      <!-- Smoke -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/smoke.png"
+               alt="Smoke" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🌫️</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Smoke</div>
+          <div class="card-game">Mortal Kombat 1 (2023)</div>
+          <div class="card-blurb">The ninja of mist and shadow. Disappearing acts, smoke-bomb mixups, and relentless pressure. Pick Smoke if you want your opponent guessing where you'll strike next.</div>
+        </div>
+      </div>
+
+      <!-- Noob Saibot -->
+      <div class="fighter-card fade-up">
+        <div class="card-img-wrap">
+          <img src="https://www.mortalkombatwarehouse.com/mk12/renders/noobsaibot.png"
+               alt="Noob Saibot" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div class="img-fallback" style="display:none">🖤</div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Noob Saibot</div>
+          <div class="card-game">Mortal Kombat 1 — DLC</div>
+          <div class="card-blurb">The original Sub-Zero, reborn in pure shadow. Dark, relentless, and commanding a shadow clone. Choose Noob if you like fighting two-on-one while looking absolutely menacing.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider">⚔ 🐉 ⚔</div>
+
+  <!-- RSVP -->
+  <div class="rsvp-section fade-up">
+    <div class="finish-him">RSVP or Perish</div>
+    <p>
+      Send word to the tournament organizer. Let us know if you will
+      answer Raiden's call — or face the wrath of Outworld.
+    </p>
+
+    <div class="shang-gif">
+      <img src="https://media1.tenor.com/m/bu1K0ld4Dm4AAAAC/mine-soul.gif"
+           alt="Shang Tsung — Your Soul Is Mine (Mortal Kombat 1995)">
+    </div>
+
+    <p class="rsvp-cta">...unless you RSVP.</p>
+
+    <div class="phone-number">
+      <a href="tel:+12055416730">205-541-6730</a>
+    </div>
+
+    <div class="flawless">⟁ Flawless Victory awaits ⟁</div>
+  </div>
+
+</div>
+
+<script>
+// ── INTRO OVERLAY ──
+const overlay = document.getElementById('intro-overlay');
+
+function dismissOverlay() {
+  overlay.classList.add('fade-out');
+  setTimeout(() => { overlay.style.display = 'none'; }, 800);
+  document.removeEventListener('keydown', dismissOverlay);
+  document.removeEventListener('click', dismissOverlay);
+}
+document.addEventListener('keydown', dismissOverlay);
+overlay.addEventListener('click', dismissOverlay);
+
+// ── FIRE PARTICLE SYSTEM ──
+const canvas = document.getElementById('fire-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = canvas.height + 10;
+    this.vx = (Math.random() - 0.5) * 0.8;
+    this.vy = -(Math.random() * 1.5 + 0.5);
+    this.size = Math.random() * 3 + 1;
+    this.life = 1;
+    this.decay = Math.random() * 0.008 + 0.003;
+    const colors = [
+      [200, 168, 78],
+      [245, 158, 11],
+      [220, 38, 38],
+      [255, 120, 20]
+    ];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life -= this.decay;
+    this.vx += (Math.random() - 0.5) * 0.05;
+    if (this.life <= 0) this.reset();
+  }
+  draw() {
+    const [r, g, b] = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.4})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * this.life * 2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.1})`;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 60; i++) {
+  const p = new Particle();
+  p.y = Math.random() * canvas.height;
+  p.life = Math.random();
+  particles.push(p);
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ── SCROLL REVEAL ──
+const fadeEls = document.querySelectorAll('.fade-up');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+fadeEls.forEach(el => observer.observe(el));
+
+// ── KONAMI CODE EASTER EGG ──
+const konamiCode = [38,38,40,40,37,39,37,39,66,65];
+let konamiIndex = 0;
+document.addEventListener('keydown', (e) => {
+  if (e.keyCode === konamiCode[konamiIndex]) {
+    konamiIndex++;
+    if (konamiIndex === konamiCode.length) {
+      konamiIndex = 0;
+      const toasty = document.createElement('div');
+      toasty.textContent = 'TOASTY! 🔥';
+      toasty.style.cssText = `
+        position: fixed; bottom: 50px; right: -300px;
+        font-family: 'Orbitron', sans-serif; font-size: 28px;
+        color: #f59e0b; z-index: 9999;
+        text-shadow: 0 0 20px rgba(245,158,11,0.8);
+        transition: right 0.3s ease;
+      `;
+      document.body.appendChild(toasty);
+      setTimeout(() => { toasty.style.right = '30px'; }, 50);
+      setTimeout(() => { toasty.style.right = '-300px'; }, 1500);
+      setTimeout(() => { toasty.remove(); }, 2000);
+    }
+  } else {
+    konamiIndex = 0;
+  }
+});
+</script>
+
+</body>
+</html>
